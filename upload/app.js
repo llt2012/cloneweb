@@ -14,8 +14,6 @@ const jwt = require("jsonwebtoken")
 const path = require("path")
 const axios = require('axios');
 var fs = require('fs');
-var json = JSON.parse(fs.readFileSync(__dirname + '/list.json', 'utf8'));
-var downloadlinkjson = JSON.parse(fs.readFileSync(__dirname + '/downloadlink.json', 'utf8'));
 var webdriver = require('selenium-webdriver');
 var chrome = require('selenium-webdriver/chrome');
 var pathChrome = require('chromedriver').path;
@@ -42,115 +40,7 @@ app.use(session({
     }
 }))
 
-app.post("/api/register", async (req, res) => {
-    try {
-        const { username, password: plainTextPassword, role } = req.body
-        if (!(username && plainTextPassword))
-            res.status(400).send("All input required")
-        const oldUser = await User.findOne({ username })
-
-        if (oldUser) {
-            return res.status(409).send("User Already Exist. Please Login");
-        }
-
-        password = await bcrypt.hash(plainTextPassword, 10);
-
-        const user = await User.create({
-            username,
-            password,
-            role
-        })
-
-        const token = jwt.sign({ user_id: user._id, username, role: user.role }, process.env.TOKEN_KEY,
-            {
-                expiresIn: "2h"
-            })
-        user.token = token
-        res.status(201).json(user)
-    } catch (error) {
-        console.log(error)
-    }
-})
-
-
-app.post("/api/login", async (req, res) => {
-    try {
-        const { username, password } = req.body
-        if (!(username || password))
-            res.status(400).json({ error: "All filed required" })
-        // Validate if user exist in our database
-        const user = await User.findOne({ username });
-        if (user && await bcrypt.compare(password, user.password)) {
-            // Create token
-            const token = jwt.sign(
-                { user_id: user._id, username, role: user.role },
-                process.env.TOKEN_KEY,
-                {
-                    expiresIn: "2h",
-                }
-            );
-
-            // save user token
-            user.token = token;
-            req.session.token = user.token
-            res.status(200).json(user)
-        }
-        res.statusCode = 404;
-        res.end('Cannot ' + req.method + ' ' + req.url);
-
-
-    } catch (err) {
-        console.log(err)
-    }
-})
-
-app.get("/welcome", auth(["admin"]), (req, res) => {
-    console.log(req.user)
-    res.render("welcome", { user: req.user })
-})
-
-app.get("/course/:id?", (req, res) => {
-    // Object.keys(json).forEach(function(key) {
-    //     console.log(Object.keys(json[key]))
-    //     if(req.params.id == key)
-    //         res.status(200).json({data:json[key]})
-    // });
-    Object.keys(json).forEach(function (key) {
-        if (req.params.id == json[key].name)
-            res.status(200).json({ data: json[key].url, link: json[key].link })
-    })
-})
-
-app.get("/download/:id?", (req, res) => {
-    // Object.keys(json).forEach(function(key) {
-    //     console.log(Object.keys(json[key]))
-    //     if(req.params.id == key)
-    //         res.status(200).json({data:json[key]})
-    // });
-    try {
-        file = __dirname;
-        Object.keys(downloadlinkjson).forEach(function (key) {
-            if (req.params.id == downloadlinkjson[key].name) {
-                file = file + downloadlinkjson[key].link
-            }
-        })
-
-        console.log(file)
-        filename = path.basename(file);
-        mimetype = mime.lookup(file);
-
-        res.setHeader('Content-disposition', 'attachment; filename=' + filename);
-        res.setHeader('Content-type', mimetype);
-
-        filestream = fs.createReadStream(file);
-        filestream.pipe(res);
-    } catch (error) {
-        console.log(error)
-    }
-
-})
-
-app.get("/live", (req, res) => {
+app.get("/", (req, res) => {
 
     if (req.query.id != null) {
         //test1(req.query.id, req.headers);
@@ -166,13 +56,6 @@ app.get("/live", (req, res) => {
     } else
         res.render("stream")
 
-})
-app.get("/", (req, res) => {
-    if (!req.session.token) {
-        res.render("login")
-    } else {
-        res.status(200).redirect("/live")
-    }
 })
 
 async function getData(link, headers,res) {

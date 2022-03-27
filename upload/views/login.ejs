@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="./app.css" />
+    <link rel="stylesheet" href="https://indestructibletype.com/fonts/Jost.css" type="text/css" charset="utf-8" />
+</head>
+
+<body>
+    <div class="main-login">
+        <div class="login">
+            <form id="login-form">
+                <input type="text" autocomplete="off" id="username" placeholder="Enter your username" /> <br />
+                <input type="password" autocomplete="off" id="password" placeholder="Enter your password" /> <br />
+                <input type="submit" value="Đăng Nhập"/>
+            </form>
+        </div>
+    </div>
+    <script>
+        const form = document.getElementById("login-form");
+        form.addEventListener("submit", loginUser);
+        function loginUser(event) {
+            event.preventDefault();
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            const result = fetch("/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username,
+                    password,
+                })
+            }).then(res => {
+                if(res.status == 200 ){
+                    localStorage.setItem("token",result.token)
+                    window.location = "/live"
+                }
+                if(res.status == 400 ){
+                    alert("All field required")
+                }
+                if(res.status == 404 ){
+                    alert("wrong username or password")
+                }
+            }).catch((error)=>{
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test</title>
+    <script src="./hls.js"></script>
+</head>
+<body>
+    <video width="640" height="700" id="video" controls></video>
+    <script>
+        var url = window.location.href;
+        var video = document.getElementById("video");
+        if(Hls.isSupported()){
+            var hls = new Hls({
+                debug:false,
+            });
+            hls.loadSource("https://tokyo.dungmori.com/720p/N3newkanji-96%20fix.mp4");
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MEDIA_ATTACHED,function(){
+                video.muted = true;
+                video.play();
+            })
+        }else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = 'https://tokyo.dungmori.com/720p/N3newkanji-96%20fix.mp4';
+        video.addEventListener('loadedmetadata', function() {
+        video.play();
+        });
+    }
+    </script>
+</body>
+</html>
